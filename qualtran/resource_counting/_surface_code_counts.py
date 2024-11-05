@@ -40,6 +40,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+
 @frozen(kw_only=True)
 class DetailedGateCounts:
     """A data class of counts of the typical target gates in a compilation.
@@ -47,6 +48,7 @@ class DetailedGateCounts:
     Specifically, this class holds counts for the number of `TGate` (and adjoint), `Toffoli`,
     `TwoBitCSwap`, `And`, clifford bloqs, single qubit rotations, and measurements.
     """
+
     t: SymbolicInt = 0
     toffoli: SymbolicInt = 0
     cswap: SymbolicInt = 0
@@ -65,7 +67,7 @@ class DetailedGateCounts:
     def __add__(self, other):
         if not isinstance(other, DetailedGateCounts):
             raise TypeError(f"Can only add other `DetailedGateCounts` objects, not {self}")
-        
+
         other_bloqs_sum = self.other_bloqs.copy()
         for bloq, count in other.other_bloqs.items():
             other_bloqs_sum[bloq] = other_bloqs_sum.get(bloq, 0) + count
@@ -82,7 +84,8 @@ class DetailedGateCounts:
             arbitrary_1q_clifford=self.arbitrary_1q_clifford + other.arbitrary_1q_clifford,
             arbitrary_2q_clifford=self.arbitrary_2q_clifford + other.arbitrary_2q_clifford,
             multi_target_pauli=self.multi_target_pauli + other.multi_target_pauli,
-            multi_target_pauli_total_targets=self.multi_target_pauli_total_targets + other.multi_target_pauli_total_targets,
+            multi_target_pauli_total_targets=self.multi_target_pauli_total_targets
+            + other.multi_target_pauli_total_targets,
             measurement_total_qubits=self.measurement_total_qubits + other.measurement_total_qubits,
             other_bloqs=other_bloqs_sum,
         )
@@ -132,20 +135,20 @@ class DetailedGateCounts:
             if k != "other_bloqs" and _is_nonzero(v):
                 return_dict[k] = v
             elif k == "other_bloqs":
-                if len(v) >0:
+                if len(v) > 0:
                     return_dict[k] = v
 
         return return_dict
         # return {k: v for k, v in d.items() if _is_nonzero(v)}
-    
+
     def lattice_surgery_spacetime_volume(
         self,
-            volume_per_t: SymbolicInt = sympy.Symbol('volume_per_t'),
-            volume_per_toffoli: SymbolicInt = sympy.Symbol('volume_per_toffoli'),
-            volume_per_cswap: SymbolicInt = sympy.Symbol('volume_per_cswap'),
-            volume_per_and_bloq: SymbolicInt = sympy.Symbol('volume_per_and_bloq'),
-            volume_per_rotation: SymbolicInt = sympy.Symbol('volume_per_rotation'),
-            ) -> SymbolicInt:
+        volume_per_t: SymbolicInt = sympy.Symbol('volume_per_t'),
+        volume_per_toffoli: SymbolicInt = sympy.Symbol('volume_per_toffoli'),
+        volume_per_cswap: SymbolicInt = sympy.Symbol('volume_per_cswap'),
+        volume_per_and_bloq: SymbolicInt = sympy.Symbol('volume_per_and_bloq'),
+        volume_per_rotation: SymbolicInt = sympy.Symbol('volume_per_rotation'),
+    ) -> SymbolicInt:
         # TODO: Implement this.
         pass
 
@@ -157,13 +160,15 @@ class SurfaceCodeGatesCost(CostKey[DetailedGateCounts]):
     The cost value type for this CostKey is `DetailedGateCounts`.
     """
 
-    def compute(self, bloq: 'Bloq', get_callee_cost: Callable[['Bloq'], DetailedGateCounts]) -> DetailedGateCounts:
+    def compute(
+        self, bloq: 'Bloq', get_callee_cost: Callable[['Bloq'], DetailedGateCounts]
+    ) -> DetailedGateCounts:
         from qualtran.bloqs.basic_gates import Hadamard, SGate, CNOT
         from qualtran.bloqs.basic_gates import GlobalPhase, Identity, Toffoli, TwoBitCSwap
         from qualtran.bloqs.basic_gates._shims import Measure
         from qualtran.bloqs.bookkeeping._bookkeeping_bloq import _BookkeepingBloq
         from qualtran.bloqs.mcmt import And, MultiTargetCNOT
-        
+
         # Pauli gates:
         if bloq_is_single_qubit_pauli(bloq):
             return DetailedGateCounts()
@@ -206,7 +211,9 @@ class SurfaceCodeGatesCost(CostKey[DetailedGateCounts]):
             return DetailedGateCounts(cswap=1)
 
         if isinstance(bloq, MultiTargetCNOT):
-            return DetailedGateCounts(multi_target_pauli=1, multi_target_pauli_total_targets=bloq.bitsize)
+            return DetailedGateCounts(
+                multi_target_pauli=1, multi_target_pauli_total_targets=bloq.bitsize
+            )
 
         # Cliffords
         if bloq_is_single_qubit_clifford(bloq):
@@ -245,7 +252,6 @@ class SurfaceCodeGatesCost(CostKey[DetailedGateCounts]):
             totals += n_times_called * callee_cost
         return totals
 
-    
     def zero(self) -> DetailedGateCounts:
         return DetailedGateCounts()
 

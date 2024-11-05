@@ -111,16 +111,10 @@ def classify_t_count_by_bloq_type(
             classified_bloqs[classification] += v * t_counts
     return dict(classified_bloqs)
 
+
 # TODO: Double check these values.
 _PAULI_ANGLES = np.array([np.pi, -np.pi, 0.0, -2 * np.pi, 2 * np.pi])
-_NON_PAULI_CLIFFORD_ANGLES = np.array(
-    [
-        np.pi / 2,
-        3 * np.pi / 2,
-        -np.pi / 2,
-        -3 * np.pi / 2,
-    ]
-)
+_NON_PAULI_CLIFFORD_ANGLES = np.array([np.pi / 2, 3 * np.pi / 2, -np.pi / 2, -3 * np.pi / 2])
 _CLIFFORD_ANGLES = np.concatenate((_PAULI_ANGLES, _NON_PAULI_CLIFFORD_ANGLES))
 
 # TODO: Double check these values.
@@ -171,19 +165,13 @@ def bloq_is_single_qubit_pauli(b: Bloq) -> bool:
     This inspects single qubit rotations. If the angles correspond to Pauli angles, this
     returns `True`.
     """
-    from qualtran.bloqs.basic_gates import (
-        XGate,
-        YGate,
-        ZGate,
-    )
+    from qualtran.bloqs.basic_gates import XGate, YGate, ZGate
     from qualtran.bloqs.basic_gates.rotation import Rx, Ry, Rz, XPowGate, YPowGate, ZPowGate
 
     if isinstance(b, Adjoint):
         b = b.subbloq
 
-    if isinstance(
-        b, (XGate, ZGate, YGate)
-    ):
+    if isinstance(b, (XGate, ZGate, YGate)):
         return True
 
     if isinstance(b, (Rz, Rx, Ry)):
@@ -199,8 +187,9 @@ def bloq_is_single_qubit_pauli(b: Bloq) -> bool:
         if np.any(np.abs(b.exponent - _PAULI_EXPONENTS) < _ANGLE_ATOL):
             return True  # Clifford hidden in a rotation bloq
         return False
-    
+
     return False
+
 
 def bloq_is_single_qubit_clifford(b: Bloq) -> bool:
     """Whether the bloq represents a single-qubit clifford operation.
@@ -211,22 +200,14 @@ def bloq_is_single_qubit_clifford(b: Bloq) -> bool:
     This inspects single qubit rotations. If the angles correspond to Clifford angles, this
     returns `True`.
     """
-    from qualtran.bloqs.basic_gates import (
-        Hadamard,
-        SGate,
-        XGate,
-        YGate,
-        ZGate,
-    )
+    from qualtran.bloqs.basic_gates import Hadamard, SGate, XGate, YGate, ZGate
     from qualtran.bloqs.basic_gates.rotation import Rx, Ry, Rz, XPowGate, YPowGate, ZPowGate
     from qualtran.bloqs.bookkeeping import ArbitraryClifford
 
     if isinstance(b, Adjoint):
         b = b.subbloq
 
-    if isinstance(
-        b, (Hadamard, XGate, ZGate, YGate, SGate)
-    ):
+    if isinstance(b, (Hadamard, XGate, ZGate, YGate, SGate)):
         return True
 
     if isinstance(b, (Rz, Rx, Ry)):
@@ -242,12 +223,13 @@ def bloq_is_single_qubit_clifford(b: Bloq) -> bool:
         if np.any(np.abs(b.exponent - _CLIFFORD_EXPONENTS) < _ANGLE_ATOL):
             return True  # Clifford hidden in a rotation bloq
         return False
-    
+
     if isinstance(b, ArbitraryClifford):
         if b.n == 1:
             return True
 
     return False
+
 
 def bloq_is_two_qubit_clifford(b: Bloq) -> bool:
     """Whether the bloq represents a two-qubit clifford operation.
@@ -255,26 +237,19 @@ def bloq_is_two_qubit_clifford(b: Bloq) -> bool:
     This checks against an explicit list of clifford bloqs in the Qualtran standard library,
     so it may return `False` for an unknown gate.
     """
-    from qualtran.bloqs.basic_gates import (
-        CNOT,
-        CYGate,
-        CZ,
-        TwoBitSwap,
-    )
+    from qualtran.bloqs.basic_gates import CNOT, CYGate, CZ, TwoBitSwap
     from qualtran.bloqs.bookkeeping import ArbitraryClifford
 
     if isinstance(b, Adjoint):
         b = b.subbloq
 
-    if isinstance(
-        b, (TwoBitSwap, CNOT, CYGate, CZ)
-    ):
+    if isinstance(b, (TwoBitSwap, CNOT, CYGate, CZ)):
         return True
-    
+
     if isinstance(b, ArbitraryClifford):
         if b.n == 2:
             return True
-        
+
     return False
 
 
@@ -294,20 +269,14 @@ def bloq_is_clifford(b: Bloq) -> bool:
 
     if bloq_is_single_qubit_clifford(b):
         return True
-    
+
     if bloq_is_two_qubit_clifford(b):
         return True
 
-    if isinstance(b,
-        ArbitraryClifford
-    ):
+    if isinstance(b, ArbitraryClifford):
         return True
-    
+
     return False
-
-
-
-
 
 
 def bloq_is_rotation(b: Bloq) -> bool:

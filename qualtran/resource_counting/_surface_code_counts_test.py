@@ -42,15 +42,16 @@ def test_surface_code_gates_cost():
 
     assert gc == DetailedGateCounts(toffoli=100, t=2 * 2 * 10, hadamard=2 * 10)
 
+
 @pytest.mark.parametrize(
     ['bloq'],
     [
-        [basic_gates.XGate(),],
-        [basic_gates.ZGate(),],
-        [basic_gates.Rx(angle=-1.0 * np.pi),],
-        [basic_gates.Ry(angle=0.0),],
-        [basic_gates.ZPowGate(exponent=0.0),],
-        [basic_gates.XPowGate(exponent=-2.0),],
+        [basic_gates.XGate()],
+        [basic_gates.ZGate()],
+        [basic_gates.Rx(angle=-1.0 * np.pi)],
+        [basic_gates.Ry(angle=0.0)],
+        [basic_gates.ZPowGate(exponent=0.0)],
+        [basic_gates.XPowGate(exponent=-2.0)],
     ],
 )
 def test_surface_code_gates_cost_paulis(bloq):
@@ -62,7 +63,9 @@ def test_surface_code_gates_cost_paulis(bloq):
 def test_surface_code_gates_cost_cbloq():
     bloq = MultiAnd(cvs=(1,) * 5)
     cbloq = bloq.decompose_bloq()
-    assert get_cost_value(bloq, SurfaceCodeGatesCost()) == get_cost_value(cbloq, SurfaceCodeGatesCost())
+    assert get_cost_value(bloq, SurfaceCodeGatesCost()) == get_cost_value(
+        cbloq, SurfaceCodeGatesCost()
+    )
 
 
 @pytest.mark.parametrize(
@@ -79,7 +82,10 @@ def test_surface_code_gates_cost_cbloq():
         # And
         [mcmt.And(), DetailedGateCounts(and_bloq=1)],
         # Rotations
-        [basic_gates.ZPowGate(exponent=0.1, global_shift=0.0, eps=1e-11), DetailedGateCounts(rotation=1)],
+        [
+            basic_gates.ZPowGate(exponent=0.1, global_shift=0.0, eps=1e-11),
+            DetailedGateCounts(rotation=1),
+        ],
         [
             rotations.phase_gradient.PhaseGradientUnitary(
                 bitsize=10, exponent=1, is_controlled=False, eps=1e-10
@@ -89,7 +95,10 @@ def test_surface_code_gates_cost_cbloq():
         ],
         # Recursive
         # TODO: Verify that this is the correct way to count the costs of this example.
-        [mcmt.MultiControlX(cvs=(1, 1, 1)), DetailedGateCounts(and_bloq=2, measurement_total_qubits=2, cnot=1)],
+        [
+            mcmt.MultiControlX(cvs=(1, 1, 1)),
+            DetailedGateCounts(and_bloq=2, measurement_total_qubits=2, cnot=1),
+        ],
     ],
 )
 def test_get_cost_value_qec_gates_cost(bloq, counts):
@@ -102,5 +111,5 @@ def test_count_multi_target_cnot():
     b = MultiTargetCNOT(bitsize=12)
 
     assert get_cost_value(b, SurfaceCodeGatesCost()) == DetailedGateCounts(
-        multi_target_pauli=1, 
-        multi_target_pauli_total_targets=12)
+        multi_target_pauli=1, multi_target_pauli_total_targets=12
+    )
