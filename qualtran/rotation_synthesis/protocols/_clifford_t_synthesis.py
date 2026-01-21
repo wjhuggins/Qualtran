@@ -94,6 +94,7 @@ def diagonal_unitary_approx(
     config: mc.MathConfig,
     relative_norm_solver: relative_norm.CliffordTRelativeNormSolver = _DEFAULT_RELATIVE_NORM_SOLVER,
     verbose: bool = False,
+    min_n: int = 0,
 ) -> Optional[channels.UnitaryChannel]:
     r"""Approximates $e^{i\theta Z} = Rz(-2\theta)$ using the diagonal protocol.
 
@@ -104,6 +105,7 @@ def diagonal_unitary_approx(
         config: A math config.
         relative_norm_solver: The relative norm solver to use.
         verbose: whether to print debug statements or not.
+        min_n: The minimum number of T gates to check.
     Returns:
         A Unitary channel.
     References:
@@ -113,7 +115,7 @@ def diagonal_unitary_approx(
     theta = config.number(theta)
     eps = config.number(eps)
     theta %= 2 * config.pi
-    protocol = _diagonal.Diagonal(theta, eps, max_n)
+    protocol = _diagonal.Diagonal(theta, eps, max_n, min_n=min_n)
     res = _solve(
         protocol,
         config,
@@ -138,6 +140,7 @@ def fallback_protocol(
     num_valid_points: int = 1,
     relative_norm_solver: relative_norm.CliffordTRelativeNormSolver = _DEFAULT_RELATIVE_NORM_SOLVER,
     verbose: bool = False,
+    min_n: int = 0,
 ) -> Optional[channels.ProjectiveChannel]:
     r"""Approximates $e^{i\theta Z} = Rz(-2\theta)$ using the fallback protocol.
 
@@ -153,6 +156,7 @@ def fallback_protocol(
             used to indirectly control the split of the error budget.
         relative_norm_solver: The relative norm solver to use.
         verbose: whether to print debug statements or not.
+        min_n: The minimum number of T gates to check.
     Returns:
         A ProjectiveChannel.
     References:
@@ -168,7 +172,7 @@ def fallback_protocol(
     eps_rotation = config.number(eps_rotation)
 
     protocol: rsp.ApproxProblem = _fallback.Fallback(
-        theta, success_probability, eps_rotation, max_n, offset_angle=True
+        theta, success_probability, eps_rotation, max_n, offset_angle=True, min_n=min_n
     )
     best_result = None
     best_cost = None
@@ -182,6 +186,8 @@ def fallback_protocol(
             verbose=verbose,
         ),
     )
+    if projections is None:
+        return None
     for rotation in projections:
         v = rotation.q.value(config.sqrt2) / _zsqrt2.radius_at_n(
             _zsqrt2.LAMBDA_KLIUCHNIKOV, rotation.n, config
@@ -194,7 +200,11 @@ def fallback_protocol(
         )
         assert err_proj <= eps_rotation, f"err_proj={err_proj:e} eps_rotation={eps_rotation:e}"
         eps_correction = min((eps - err_proj) / max(abs_v2, 1 - success_probability), 0.1)  # type: ignore[type-var]
+        if eps_correction <= 0:
+            continue
+
         protocol = _diagonal.Diagonal(theta - arg_v, eps_correction, 400)
+
         correction_cands = cast(
             list[channels.UnitaryChannel],
             _solve(

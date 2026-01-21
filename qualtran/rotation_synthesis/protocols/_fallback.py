@@ -142,6 +142,7 @@ class Fallback(_protocol.ApproxProblem):
     max_n: int
     offset_angle: bool = True
     filter_by_dist: bool = True
+    min_n: int = 0
 
     def make_state(self, n: int, config: mc.MathConfig, offset: bool) -> lattice.SelingerState:
         theta = self.theta
@@ -193,8 +194,7 @@ class Fallback(_protocol.ApproxProblem):
     def get_points(
         self, config: mc.MathConfig, verbose: bool = False
     ) -> Iterator[tuple[int, rings.ZW]]:
-        n = 0
-        while True:
+        for n in range(self.min_n, self.max_n + 1):
             if verbose:
                 print(f"{n=}")
             options = [False]
@@ -207,9 +207,6 @@ class Fallback(_protocol.ApproxProblem):
                 for p in lattice.get_points_from_state(fin_state, config):
                     q = overall_action.g.apply(p)
                     yield n, q
-            n += 1
-            if n > self.max_n:
-                break
 
     def plot(
         self,

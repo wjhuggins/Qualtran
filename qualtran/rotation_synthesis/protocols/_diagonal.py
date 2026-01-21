@@ -82,6 +82,7 @@ class Diagonal(_protocol.ApproxProblem):
     theta: rst.Real
     eps: rst.Real
     max_n: int
+    min_n: int = 0
 
     def make_state(self, n: int, config: mc.MathConfig, offset: int) -> lattice.SelingerState:
         theta = self.theta
@@ -118,10 +119,9 @@ class Diagonal(_protocol.ApproxProblem):
     def get_points(
         self, config: mc.MathConfig, verbose: bool = False
     ) -> Iterator[tuple[int, rings.ZW]]:
-        n = 0
-        while True:
+        for n in range(self.min_n, self.max_n + 1):
             if verbose:
-                print(f"{n=}", flush=True)
+                print(f"{n=}")
             for offset in False, True:
                 os = self.make_state(n, config, offset=offset)
                 overall_action = lattice.get_overall_action(os, config)
@@ -129,9 +129,6 @@ class Diagonal(_protocol.ApproxProblem):
                 for p in lattice.get_points_from_state(fin_state, config):
                     q = overall_action.g.apply(p)
                     yield n, q
-            n += 1
-            if n > self.max_n:
-                break
 
     def plot(
         self,
