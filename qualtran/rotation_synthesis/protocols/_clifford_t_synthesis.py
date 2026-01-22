@@ -116,10 +116,14 @@ def diagonal_unitary_approx(
     eps = config.number(eps)
     theta %= 2 * config.pi
     protocol = _diagonal.Diagonal(theta, eps, max_n, min_n=min_n)
+    if min_n > 0:
+        point_collector = rsp.FixedNPointCollector(target_count=1)
+    else:
+        point_collector = rsp.SimplePointCollector(target_count=1)
     res = _solve(
         protocol,
         config,
-        rsp.SimplePointCollector(target_count=1),
+        point_collector,
         relative_norm_solver=relative_norm_solver,
         verbose=verbose,
     )

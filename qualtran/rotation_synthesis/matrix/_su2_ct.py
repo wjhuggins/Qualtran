@@ -230,6 +230,10 @@ class SU2CliffordT:
                 break
             u = new_u
         return u
+    
+    def indivisible(self) -> bool:
+        u = self
+        return not all(a.is_divisible_by(_zw.LAMBDA_KLIUCHNIKOV) for a in u.matrix.flat)
 
     def num_t_gates(self) -> int:
         """Returns the number of T gates needed to synthesize the matrix."""

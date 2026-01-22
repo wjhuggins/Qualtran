@@ -90,6 +90,29 @@ class SimplePointCollector(PointCollector):
 
     def status(self) -> str:
         return f"have={len(self._points)} need={self._target_count}"
+    
+class FixedNPointCollector(PointCollector):
+    """Accepts the first `k` valid points."""
+
+    def __init__(self, target_count: int = 1):
+        super().__init__()
+        self._points: list[tuple[rings.ZW, rings.ZW, int]] = []
+        self._target_count = target_count
+
+    def add_point(self, p: rings.ZW, q: rings.ZW, n: int, config: mc.MathConfig) -> None:
+        chan = channels.UnitaryChannel(p, q, n)
+        if chan.to_matrix().indivisible():
+            self._points.append((p, q, n))
+
+    def is_done(self) -> bool:
+        return len(self._points) >= self._target_count
+
+    def result(self) -> list[channels.Channel]:
+        return [channels.UnitaryChannel(*p) for p in self._points]
+
+    def status(self) -> str:
+        return f"have={len(self._points)} need={self._target_count}"
+
 
 
 class SplitRegionCollector(PointCollector):
